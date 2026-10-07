@@ -1,0 +1,73 @@
+# GOOD duplex: clean house hack. Needs the max allowed seller concession plus
+# a modest down-payment-assistance grant to close on $3,000 cash on hand —
+# that's deliberate, matching the investor profile's real cash constraint.
+deal_name: "123 Maple St Duplex"
+address: "123 Maple St, Allentown, PA"
+price: 165000
+county: Lehigh
+property_type: duplex
+as_of_date: "2026-10-06"
+
+units:
+  - label: "Unit A (owner)"
+    bedrooms: 2
+    sqft: 800
+    is_owner_unit: true
+    market_rent: 1150
+  - label: "Unit B"
+    bedrooms: 2
+    sqft: 800
+    is_owner_unit: false
+    market_rent: 1150
+    current_rent: 1150
+    tenant_name: "Current tenant"
+    lease_start: "2026-01-01"
+    lease_end: "2029-06-30"
+    lease_type: gross
+
+expense_items:
+  - name: property_tax
+    annual_amount: 2800
+    source: county_record
+  - name: insurance
+    annual_amount: 1100
+    source: seller_provided
+
+financing:
+  method: fha
+  down_payment_pct: 0.035
+  interest_rate: 0.065
+  amortization_years: 30
+  upfront_mip_pct: 0.0175
+  annual_mip_pct: 0.0055
+  closing_cost_pct: 0.03
+  max_seller_concession_pct: 0.06
+  rental_income_credit_pct: 0.75
+  max_front_dti: 0.31
+  max_back_dti: 0.43
+
+assumptions:
+  vacancy_pct: 0.10
+  management_pct: 0.08
+  repairs_pct: 0.07
+  capex_reserve_per_sqft: 0.25
+  rent_growth_pct: 0.02
+  expense_growth_pct: 0.03
+  exit_cap_rate_spread: 0.005
+  hold_years: 5
+  disposition_cost_pct: 0.06
+
+is_house_hack: true
+owner_occupy_months: 12
+seller_concessions_amount: 9900
+down_payment_assistance_amount: 3000
+comparable_rent_estimate: 1100
+owner_share_of_expenses: 0
+
+year_built: 1995
+roof_remaining_life_years: 15
+peeling_paint: false
+unsafe_electrical: false
+missing_handrails: false
+no_permanent_heat_source: false
+separate_utilities: true

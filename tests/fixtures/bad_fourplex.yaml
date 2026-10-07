@@ -1,0 +1,94 @@
+# BAD fourplex: rent is far too low relative to price/taxes. NOI is negative
+# before any debt service, so no price fixes it (max offer price = $0), and
+# the FHA self-sufficiency test (75% of total market rent) fails badly, on
+# top of several property-condition red flags. Should PASS (reject).
+deal_name: "9 Union St Fourplex"
+address: "9 Union St, Easton, PA"
+price: 400000
+county: Northampton
+property_type: fourplex
+as_of_date: "2026-10-06"
+
+units:
+  - label: "Unit 1 (owner)"
+    bedrooms: 1
+    sqft: 500
+    is_owner_unit: true
+    market_rent: 600
+  - label: "Unit 2"
+    bedrooms: 1
+    sqft: 500
+    is_owner_unit: false
+    market_rent: 600
+    current_rent: 600
+    tenant_name: "Tenant 2"
+    lease_start: "2026-05-01"
+    lease_end: "2027-04-30"
+    lease_type: gross
+  - label: "Unit 3"
+    bedrooms: 1
+    sqft: 500
+    is_owner_unit: false
+    market_rent: 600
+    current_rent: 600
+    tenant_name: "Tenant 3"
+    lease_start: "2026-05-01"
+    lease_end: "2027-04-30"
+    lease_type: gross
+  - label: "Unit 4"
+    bedrooms: 1
+    sqft: 500
+    is_owner_unit: false
+    market_rent: 600
+    current_rent: 600
+    tenant_name: "Tenant 4"
+    lease_start: "2026-05-01"
+    lease_end: "2027-04-30"
+    lease_type: gross
+
+expense_items:
+  - name: property_tax
+    annual_amount: 18000
+    source: county_record
+  - name: insurance
+    annual_amount: 4000
+    source: seller_provided
+
+financing:
+  method: fha
+  down_payment_pct: 0.035
+  interest_rate: 0.065
+  amortization_years: 30
+  upfront_mip_pct: 0.0175
+  annual_mip_pct: 0.0055
+  closing_cost_pct: 0.03
+  max_seller_concession_pct: 0.06
+  rental_income_credit_pct: 0.75
+  max_front_dti: 0.31
+  max_back_dti: 0.43
+
+assumptions:
+  vacancy_pct: 0.10
+  management_pct: 0.08
+  repairs_pct: 0.07
+  capex_reserve_per_sqft: 0.25
+  rent_growth_pct: 0.02
+  expense_growth_pct: 0.03
+  exit_cap_rate_spread: 0.005
+  hold_years: 5
+  disposition_cost_pct: 0.06
+
+is_house_hack: true
+owner_occupy_months: 12
+seller_concessions_amount: 0
+down_payment_assistance_amount: 0
+comparable_rent_estimate: 900
+owner_share_of_expenses: 0
+
+year_built: 1965
+roof_remaining_life_years: 1
+peeling_paint: true
+unsafe_electrical: false
+missing_handrails: true
+no_permanent_heat_source: false
+separate_utilities: false

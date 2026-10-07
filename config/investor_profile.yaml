@@ -1,0 +1,69 @@
+# RE-VA investor profile
+# Every field here is configurable. Anything the engine can't find here falls
+# back to a code-level default and is labeled "assumption" in output.
+# VERIFY before relying on any number marked "placeholder" below.
+
+investor:
+  name: Marcos
+  experience: first_time_buyer
+  market: Lehigh Valley, PA
+  strategy: house_hack            # house_hack | rental | commercial
+  target_price: 275000            # placeholder, set after lender pre-approval
+  max_price: 500000               # search ceiling (user-set 2026-10-06)
+  cash_on_hand: 3000               # liquid cash available for down payment + closing + reserves
+  property_types: [duplex, triplex, fourplex, mixed_use_residential_majority]
+  goal: low_housing_cost_then_cash_flow
+  timeline_months: null           # looser timeline (user-set); informational only, not a pass/fail gate
+  monthly_gross_income: 8000      # expected after graduation (8k to 11k); using low end for qualifying
+  monthly_debt_payments: 0
+  credit_score: 620               # above FHA 580 minimum; replace with exact score
+  income_type: self_employed      # part owner of the HVAC company, paid on percentage
+  ownership_pct: unknown          # get in writing; 25%+ means lenders treat as self-employed
+  income_streams:
+    - name: own_jobs_commission
+      rate: 0.15                  # 15% of every job performed personally
+      started: current
+    - name: company_override
+      rate: unknown                # percentage of every company job, starts after graduation
+      started: after_graduation    # lenders need history before counting this
+  pay_documented_as: unknown       # w2 | 1099 | k1 | owner_draw
+  years_of_tax_returns_with_this_income: 0
+  possible_co_borrower: none       # e.g. parent as FHA non-occupant co-borrower
+  employment_notes: HVAC technician and part owner, currently a student, full time after graduation
+
+financing:
+  method: fha                      # fha | conventional | commercial_loan | cash | seller_finance
+  down_payment_pct: 0.035
+  interest_rate: 0.065              # placeholder, update from a real lender quote
+  amortization_years: 30
+  upfront_mip_pct: 0.0175           # financed into the loan
+  annual_mip_pct: 0.0055            # verify current HUD rate
+  closing_cost_pct: 0.03
+  max_seller_concession_pct: 0.06
+  owner_occupy_months: 12
+  rental_income_credit_pct: 0.75    # share of other units' rent lenders count toward qualifying income
+  max_front_dti: 0.31
+  max_back_dti: 0.43
+  fha_loan_limits_lehigh_2026:      # verify on HUD lookup before use; null = not yet confirmed, check manually
+    one_unit: 541287
+    two_unit: null
+    three_unit: null
+    four_unit: 1041125
+
+underwriting_thresholds:
+  max_owner_net_housing_cost: 800   # what I pay per month after tenant rent, during live-in phase
+  min_move_out_cash_flow: 200       # per month, once I move out and rent my unit (also used as generic rental threshold)
+  min_move_out_cash_on_cash: 0.10   # also used as generic rental threshold
+  min_dscr: 1.15
+  max_breakeven_occupancy: 0.85
+
+assumptions:
+  vacancy_pct: 0.10
+  management_pct: 0.08
+  repairs_pct: 0.07
+  capex_reserve_per_sqft: 0.25
+  rent_growth_pct: 0.02
+  expense_growth_pct: 0.03
+  exit_cap_rate_spread: 0.005
+  hold_years: 5
+  disposition_cost_pct: 0.06        # code-level default, not in original spec profile; selling costs at exit
