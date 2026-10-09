@@ -12,7 +12,7 @@ import streamlit as st
 from sqlalchemy.orm import Session
 
 from auth.profile import load_user_profile, raw_profile_dict, save_user_profile_updates
-from auth.users import authenticate, create_user, get_user
+from auth.users import authenticate, create_user, get_user, invite_code_required, verify_invite_code
 from db.models import User
 from db.session import get_session, init_db
 from underwriting.profile import InvestorProfile
@@ -75,14 +75,18 @@ def require_login(s: Session) -> User:
                 st.rerun()
 
     with tab_signup:
+        code_needed = invite_code_required()
         with st.form("signup_form"):
             new_username = st.text_input("Choose a username", key="signup_username")
             new_password = st.text_input("Choose a password (8+ characters)", type="password", key="signup_password")
             confirm_password = st.text_input("Confirm password", type="password", key="signup_confirm")
+            invite_code = st.text_input("Invite code", key="signup_invite_code") if code_needed else ""
             submitted_signup = st.form_submit_button("Create account", type="primary")
         if submitted_signup:
             if new_password != confirm_password:
                 st.error("Passwords don't match.")
+            elif code_needed and not verify_invite_code(invite_code):
+                st.error("Incorrect invite code.")
             else:
                 try:
                     user = create_user(s, new_username, new_password)

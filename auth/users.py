@@ -8,16 +8,35 @@ not a general-purpose auth system.
 """
 from __future__ import annotations
 
+import os
 import re
 
 import bcrypt
+from dotenv import load_dotenv
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from db.models import User
 
+load_dotenv()
+
 USERNAME_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{3,30}$")
 MIN_PASSWORD_LENGTH = 8
+
+
+def invite_code_required() -> bool:
+    """True once SIGNUP_INVITE_CODE is set in the environment. Signup stays
+    open (no code needed) until you set one — e.g. for local dev, or before
+    you've decided to lock a hosted deployment down."""
+    return bool(os.environ.get("SIGNUP_INVITE_CODE"))
+
+
+def verify_invite_code(code: str) -> bool:
+    """Always True if no SIGNUP_INVITE_CODE is configured; otherwise an exact match."""
+    expected = os.environ.get("SIGNUP_INVITE_CODE")
+    if not expected:
+        return True
+    return code == expected
 
 
 def hash_password(password: str) -> str:

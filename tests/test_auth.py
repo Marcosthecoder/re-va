@@ -4,7 +4,30 @@ from __future__ import annotations
 import pytest
 
 from auth.profile import load_user_profile, raw_profile_dict, save_user_profile_updates
-from auth.users import authenticate, create_user, get_user, hash_password, verify_password
+from auth.users import (
+    authenticate,
+    create_user,
+    get_user,
+    hash_password,
+    invite_code_required,
+    verify_invite_code,
+    verify_password,
+)
+
+
+def test_invite_code_not_required_by_default(monkeypatch):
+    monkeypatch.delenv("SIGNUP_INVITE_CODE", raising=False)
+    assert invite_code_required() is False
+    assert verify_invite_code("anything") is True
+    assert verify_invite_code("") is True
+
+
+def test_invite_code_required_once_set(monkeypatch):
+    monkeypatch.setenv("SIGNUP_INVITE_CODE", "letmein")
+    assert invite_code_required() is True
+    assert verify_invite_code("letmein") is True
+    assert verify_invite_code("wrong") is False
+    assert verify_invite_code("") is False
 
 
 def test_hash_password_is_not_plaintext_and_verifies():
