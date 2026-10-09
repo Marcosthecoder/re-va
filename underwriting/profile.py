@@ -64,8 +64,17 @@ class InvestorProfile(BaseModel):
     underwriting_thresholds: ThresholdsSection
 
 
+def investor_profile_from_dict(raw: dict) -> InvestorProfile:
+    """Validate a raw profile dict (already parsed from YAML or JSON), normalizing
+    "unknown" strings to None. Shared by the file-based loader below and by
+    auth.profile's per-user, DB-backed profiles."""
+    raw = dict(raw)
+    raw["investor"] = dict(raw["investor"])
+    raw["investor"]["ownership_pct"] = _unknown_to_none(raw["investor"].get("ownership_pct"))
+    return InvestorProfile(**raw)
+
+
 def load_investor_profile(path: str | Path) -> InvestorProfile:
     """Load and validate the investor profile YAML, normalizing "unknown" strings to None."""
     raw = yaml.safe_load(Path(path).read_text())
-    raw["investor"]["ownership_pct"] = _unknown_to_none(raw["investor"].get("ownership_pct"))
-    return InvestorProfile(**raw)
+    return investor_profile_from_dict(raw)

@@ -25,3 +25,12 @@ def db_session():
         yield session
     finally:
         session.close()
+
+
+@pytest.fixture
+def user(db_session):
+    """A real signed-up test account, for tests that need a user_id to scope
+    deals/comps to."""
+    from auth.users import create_user
+
+    return create_user(db_session, "testuser", "testpassword123")

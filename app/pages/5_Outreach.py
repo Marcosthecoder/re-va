@@ -5,7 +5,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import streamlit as st
 
-from app.common import disclaimer_banner, load_profile, session
+from app.common import disclaimer_banner, load_profile, require_login, session
 from db.repository import get_deal, list_deals, load_property_input
 from llm.client import LLMNotConfigured
 from outreach.drafts import DRAFT_BUILDERS, list_drafts, polish_draft, save_draft
@@ -13,12 +13,15 @@ from reports.report_builder import build_report
 from underwriting.pipeline import analyze_deal
 
 st.set_page_config(page_title="RE-VA — Outreach", layout="wide")
+
+s = session()
+user = require_login(s)
+
 st.title("Outreach Drafts")
 disclaimer_banner()
 st.caption("Drafts only. Nothing here is ever sent automatically — copy into your own email client and review before sending.")
 
-s = session()
-deals = list_deals(s)
+deals = list_deals(s, user.id)
 if not deals:
     st.info("No deals yet. Go to **New Deal** to add one.")
     st.stop()
@@ -27,11 +30,11 @@ options = {f"{d.deal_name} ({d.address})": d.id for d in deals}
 default_id = st.session_state.get("selected_deal_id", deals[0].id)
 default_label = next((label for label, i in options.items() if i == default_id), list(options)[0])
 choice = st.selectbox("Deal", options=list(options), index=list(options).index(default_label))
-deal_row = get_deal(s, options[choice])
+deal_row = get_deal(s, options[choice], user.id)
 st.session_state["selected_deal_id"] = deal_row.id
 
 deal = load_property_input(deal_row)
-profile = load_profile()
+profile = load_profile(s, user)
 
 draft_type = st.selectbox("Draft type", list(DRAFT_BUILDERS))
 

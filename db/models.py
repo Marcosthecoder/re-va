@@ -6,6 +6,10 @@ it came from in ``Deal.yaml_content`` and reloaded into a PropertyInput via
 being re-normalized into many relational tables. Pipeline stage, verdict
 summary, checklist progress, outreach drafts, rent comps, and every LLM call
 are real rows so they survive a restart.
+
+Every Deal and RentComp belongs to a User (``user_id``), so the hosted,
+multi-user deployment keeps each signed-in user's deals and data separate.
+ChecklistItem and OutreachDraft are scoped indirectly through their deal.
 """
 from __future__ import annotations
 
@@ -28,10 +32,21 @@ def _utcnow() -> dt.datetime:
     return dt.datetime.now(dt.timezone.utc)
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(200))
+    profile_json: Mapped[str | None] = mapped_column(Text, default=None)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=_utcnow)
+
+
 class Deal(Base):
     __tablename__ = "deals"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     deal_name: Mapped[str] = mapped_column(String(200))
     address: Mapped[str] = mapped_column(String(300))
     price: Mapped[float] = mapped_column(Float)
@@ -88,6 +103,7 @@ class RentComp(Base):
     __tablename__ = "rent_comps"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     county: Mapped[str] = mapped_column(String(100))
     municipality: Mapped[str | None] = mapped_column(String(100), default=None)
     bedrooms: Mapped[float | None] = mapped_column(Float, default=None)
@@ -108,3 +124,4 @@ class LLMCallLog(Base):
     prompt_excerpt: Mapped[str] = mapped_column(Text)
     response_excerpt: Mapped[str] = mapped_column(Text)
     deal_id: Mapped[int | None] = mapped_column(ForeignKey("deals.id"), default=None)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), default=None)

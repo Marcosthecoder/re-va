@@ -1,5 +1,9 @@
 """Thin, testable CRUD helpers around the ORM models, shared by every
 Streamlit page so none of them talk to SQLAlchemy directly.
+
+Every deal belongs to a user. ``get_deal`` and ``list_deals`` always filter
+by ``user_id`` so one account can never read or modify another account's
+deals, even by guessing an id.
 """
 from __future__ import annotations
 
@@ -12,8 +16,9 @@ from underwriting import engine, verdict
 from underwriting.models import PropertyInput
 
 
-def create_deal(session: Session, property_input: PropertyInput, yaml_content: str) -> Deal:
+def create_deal(session: Session, property_input: PropertyInput, yaml_content: str, user_id: int) -> Deal:
     deal = Deal(
+        user_id=user_id,
         deal_name=property_input.deal_name,
         address=property_input.address,
         price=property_input.price,
@@ -54,15 +59,19 @@ def save_verdict(session: Session, deal: Deal, core: engine.CoreMetrics, v: verd
     session.commit()
 
 
-def list_deals(session: Session, stage: str | None = None) -> list[Deal]:
-    stmt = select(Deal).order_by(Deal.updated_at.desc())
+def list_deals(session: Session, user_id: int, stage: str | None = None) -> list[Deal]:
+    stmt = select(Deal).where(Deal.user_id == user_id).order_by(Deal.updated_at.desc())
     if stage:
         stmt = stmt.where(Deal.stage == stage)
     return list(session.scalars(stmt))
 
 
-def get_deal(session: Session, deal_id: int) -> Deal | None:
-    return session.get(Deal, deal_id)
+def get_deal(session: Session, deal_id: int, user_id: int) -> Deal | None:
+    """Returns the deal only if it exists AND belongs to user_id, else None."""
+    deal = session.get(Deal, deal_id)
+    if deal is None or deal.user_id != user_id:
+        return None
+    return deal
 
 
 def set_stage(session: Session, deal: Deal, stage: str) -> None:

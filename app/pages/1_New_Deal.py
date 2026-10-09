@@ -10,7 +10,7 @@ import streamlit as st
 import yaml
 from pydantic import ValidationError
 
-from app.common import disclaimer_banner, load_assumptions_defaults, load_financing_defaults, session
+from app.common import disclaimer_banner, load_assumptions_defaults, load_financing_defaults, require_login, session
 from db.repository import create_deal
 from intake.extractor import extract_from_pdf, extract_from_text, parse_rent_roll_csv, parse_rent_roll_xlsx
 from intake.schemas import IntakeResult
@@ -19,6 +19,10 @@ from roadmap.tracker import create_checklist_for_deal
 from underwriting.models import PropertyInput
 
 st.set_page_config(page_title="RE-VA — New Deal", layout="wide")
+
+s = session()
+user = require_login(s)
+
 st.title("New Deal")
 disclaimer_banner()
 
@@ -182,8 +186,8 @@ expenses_df = st.data_editor(
 )
 
 with st.expander("Financing and assumptions (prefilled from your investor profile — edit per deal if needed)"):
-    fin_defaults = load_financing_defaults()
-    assum_defaults = load_assumptions_defaults()
+    fin_defaults = load_financing_defaults(user)
+    assum_defaults = load_assumptions_defaults(user)
     f1, f2, f3 = st.columns(3)
     with f1:
         down_payment_pct = st.number_input("Down payment %", value=float(fin_defaults.get("down_payment_pct", 0.035)), format="%.4f")
@@ -293,8 +297,7 @@ if st.button("Create Deal", type="primary"):
             st.write(f"- {'.'.join(str(p) for p in err['loc'])}: {err['msg']}")
     else:
         yaml_content = yaml.safe_dump(property_input.model_dump(mode="json", exclude_none=True), sort_keys=False)
-        s = session()
-        row = create_deal(s, property_input, yaml_content)
+        row = create_deal(s, property_input, yaml_content, user_id=user.id)
         if row.is_house_hack:
             create_checklist_for_deal(s, row.id, "house_hack")
         else:

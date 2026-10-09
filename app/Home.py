@@ -6,17 +6,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import pandas as pd
 import streamlit as st
 
-from app.common import disclaimer_banner, load_profile, money, pct, session
+from app.common import disclaimer_banner, load_profile, money, pct, require_login, session
 from db.models import STAGES
 from db.repository import list_deals
 
 st.set_page_config(page_title="RE-VA — Pipeline", layout="wide")
 
+s = session()
+user = require_login(s)
+
 st.title("RE-VA — Real Estate Virtual Assistant")
 disclaimer_banner()
 
-s = session()
-profile = load_profile()
+profile = load_profile(s, user)
 
 col1, col2, col3 = st.columns(3)
 col1.metric("Cash on hand", money(profile.investor.cash_on_hand))
@@ -26,7 +28,7 @@ col3.metric("Strategy", profile.investor.strategy.replace("_", " "))
 st.divider()
 st.subheader("Deal pipeline")
 
-deals = list_deals(s)
+deals = list_deals(s, user.id)
 if not deals:
     st.info("No deals yet. Go to **New Deal** in the sidebar to add your first one.")
 else:

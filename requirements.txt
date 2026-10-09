@@ -12,6 +12,7 @@ python-dotenv>=1.0,<2
 pypdf>=4.0,<5
 openpyxl>=3.1,<4
 fpdf2>=2.7,<3
+bcrypt>=4.0,<5
 
 # Phase 4 (optional; Google Sheets export only used if credentials are configured)
 gspread>=6.0,<7

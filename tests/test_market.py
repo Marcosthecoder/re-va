@@ -45,22 +45,39 @@ def test_compare_to_comps_under_market():
     assert result.flag == "under_market"
 
 
-def test_add_list_delete_comp_round_trip(db_session):
-    comp = add_comp(db_session, "Lehigh", 1100, bedrooms=2, sqft=800, municipality="Allentown", source="test")
+def test_add_list_delete_comp_round_trip(db_session, user):
+    comp = add_comp(db_session, user.id, "Lehigh", 1100, bedrooms=2, sqft=800, municipality="Allentown", source="test")
     assert comp.id is not None
-    comps = list_comps(db_session, county="Lehigh")
+    comps = list_comps(db_session, user.id, county="Lehigh")
     assert comp in comps
 
-    delete_comp(db_session, comp)
-    assert list_comps(db_session, county="Lehigh") == []
+    delete_comp(db_session, comp, user.id)
+    assert list_comps(db_session, user.id, county="Lehigh") == []
 
 
-def test_list_comps_filters_by_bedrooms(db_session):
-    add_comp(db_session, "Lehigh", 1000, bedrooms=1)
-    add_comp(db_session, "Lehigh", 1500, bedrooms=3)
-    two_br = list_comps(db_session, county="Lehigh", bedrooms=1)
+def test_list_comps_filters_by_bedrooms(db_session, user):
+    add_comp(db_session, user.id, "Lehigh", 1000, bedrooms=1)
+    add_comp(db_session, user.id, "Lehigh", 1500, bedrooms=3)
+    two_br = list_comps(db_session, user.id, county="Lehigh", bedrooms=1)
     assert len(two_br) == 1
     assert two_br[0].rent == 1000
+
+
+def test_list_comps_does_not_include_other_users_comps(db_session, user):
+    from auth.users import create_user
+
+    other = create_user(db_session, "otheruser", "otherpassword123")
+    add_comp(db_session, other.id, "Lehigh", 1000)
+    assert list_comps(db_session, user.id, county="Lehigh") == []
+
+
+def test_delete_comp_rejects_wrong_owner(db_session, user):
+    from auth.users import create_user
+
+    other = create_user(db_session, "otheruser", "otherpassword123")
+    comp = add_comp(db_session, other.id, "Lehigh", 1000)
+    with pytest.raises(PermissionError):
+        delete_comp(db_session, comp, user.id)
 
 
 def test_lookup_property_tax_is_always_manual_entry():

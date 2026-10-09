@@ -13,6 +13,7 @@ OVER_UNDER_THRESHOLD = 0.15
 
 def add_comp(
     session: Session,
+    user_id: int,
     county: str,
     rent: float,
     bedrooms: float | None = None,
@@ -21,14 +22,16 @@ def add_comp(
     source: str = "manual",
     notes: str | None = None,
 ) -> RentComp:
-    comp = RentComp(county=county, municipality=municipality, bedrooms=bedrooms, sqft=sqft, rent=rent, source=source, notes=notes)
+    comp = RentComp(
+        user_id=user_id, county=county, municipality=municipality, bedrooms=bedrooms, sqft=sqft, rent=rent, source=source, notes=notes
+    )
     session.add(comp)
     session.commit()
     return comp
 
 
-def list_comps(session: Session, county: str | None = None, bedrooms: float | None = None) -> list[RentComp]:
-    stmt = select(RentComp).order_by(RentComp.date_entered.desc())
+def list_comps(session: Session, user_id: int, county: str | None = None, bedrooms: float | None = None) -> list[RentComp]:
+    stmt = select(RentComp).where(RentComp.user_id == user_id).order_by(RentComp.date_entered.desc())
     if county:
         stmt = stmt.where(RentComp.county == county)
     if bedrooms is not None:
@@ -36,7 +39,9 @@ def list_comps(session: Session, county: str | None = None, bedrooms: float | No
     return list(session.scalars(stmt))
 
 
-def delete_comp(session: Session, comp: RentComp) -> None:
+def delete_comp(session: Session, comp: RentComp, user_id: int) -> None:
+    if comp.user_id != user_id:
+        raise PermissionError("This comp belongs to a different account.")
     session.delete(comp)
     session.commit()
 

@@ -52,9 +52,9 @@ def test_draft_builders_registry_matches_functions():
     assert DRAFT_BUILDERS["broker"] is draft_broker_email
 
 
-def test_save_and_list_drafts(db_session):
+def test_save_and_list_drafts(db_session, user):
     deal = _deal()
-    row = repository.create_deal(db_session, deal, (FIXTURES / "good_duplex.yaml").read_text())
+    row = repository.create_deal(db_session, deal, (FIXTURES / "good_duplex.yaml").read_text(), user_id=user.id)
     subject, body = draft_broker_email(deal)
     saved = save_draft(db_session, row.id, "broker", subject, body)
     assert saved.id is not None
@@ -64,8 +64,8 @@ def test_save_and_list_drafts(db_session):
     assert drafts[0].subject == subject
 
 
-def test_save_draft_rejects_unknown_type(db_session):
+def test_save_draft_rejects_unknown_type(db_session, user):
     deal = _deal()
-    row = repository.create_deal(db_session, deal, (FIXTURES / "good_duplex.yaml").read_text())
+    row = repository.create_deal(db_session, deal, (FIXTURES / "good_duplex.yaml").read_text(), user_id=user.id)
     with pytest.raises(ValueError):
         save_draft(db_session, row.id, "carrier_pigeon", "subj", "body")

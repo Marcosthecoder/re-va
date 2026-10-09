@@ -4,20 +4,24 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import streamlit as st
-import yaml
 
-from app.common import PROFILE_PATH, disclaimer_banner, load_profile, save_profile_updates
+from app.common import disclaimer_banner, load_profile, require_login, save_profile_updates, session
+from auth.profile import raw_profile_dict
 
 st.set_page_config(page_title="RE-VA — Investor Profile", layout="wide")
+
+s = session()
+user = require_login(s)
+
 st.title("Investor Profile")
 disclaimer_banner()
 st.caption(
-    "These are your investor-level settings and underwriting thresholds, used by every deal. "
-    "Saving rewrites config/investor_profile.yaml and loses any hand-written comments in that file."
+    "These are your investor-level settings and underwriting thresholds, used by every deal in your account. "
+    "Nothing here is visible to other accounts."
 )
 
-profile = load_profile()
-raw = yaml.safe_load(PROFILE_PATH.read_text())
+profile = load_profile(s, user)
+raw = raw_profile_dict(user)
 
 st.subheader("Investor")
 c1, c2 = st.columns(2)
@@ -74,15 +78,13 @@ if st.button("Save", type="primary"):
             "min_move_out_cash_on_cash": min_move_out_cash_on_cash, "min_dscr": min_dscr,
             "max_breakeven_occupancy": max_breakeven_occupancy,
         },
+        "financing": {
+            "fha_loan_limits_lehigh_2026": {
+                "one_unit": one_unit or None, "two_unit": two_unit or None,
+                "three_unit": three_unit or None, "four_unit": four_unit or None,
+            },
+        },
     }
-    save_profile_updates(updates)
-
-    raw2 = yaml.safe_load(PROFILE_PATH.read_text())
-    raw2.setdefault("financing", {}).setdefault("fha_loan_limits_lehigh_2026", {})
-    raw2["financing"]["fha_loan_limits_lehigh_2026"] = {
-        "one_unit": one_unit or None, "two_unit": two_unit or None,
-        "three_unit": three_unit or None, "four_unit": four_unit or None,
-    }
-    PROFILE_PATH.write_text(yaml.safe_dump(raw2, sort_keys=False))
+    save_profile_updates(s, user, updates)
     st.success("Saved.")
     st.rerun()

@@ -5,7 +5,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import streamlit as st
 
-from app.common import disclaimer_banner, esc, load_profile, session
+from app.common import disclaimer_banner, esc, load_profile, require_login, session
 from coach import quiz as quiz_mod
 from coach.chat import ask
 from db.repository import get_deal, list_deals, load_property_input
@@ -14,19 +14,22 @@ from reports.report_builder import build_report
 from underwriting.pipeline import analyze_deal
 
 st.set_page_config(page_title="RE-VA — Coach", layout="wide")
+
+s = session()
+user = require_login(s)
+
 st.title("Coach")
 disclaimer_banner()
 
-s = session()
-deals = list_deals(s)
+deals = list_deals(s, user.id)
 options = {"No specific deal": None, **{f"{d.deal_name} ({d.address})": d.id for d in deals}}
 choice = st.selectbox("Use a deal as the worked example?", options=list(options))
 deal_id = options[choice]
 
 report = None
 if deal_id is not None:
-    deal_row = get_deal(s, deal_id)
-    profile = load_profile()
+    deal_row = get_deal(s, deal_id, user.id)
+    profile = load_profile(s, user)
     deal = load_property_input(deal_row)
     full = analyze_deal(deal, profile)
     report = build_report(deal, full.analysis, full.verdict, full.hh_bundle)

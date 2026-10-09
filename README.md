@@ -50,8 +50,16 @@ deal-detail page (rent roll, pro forma, scenarios, house-hack breakdown,
 rule-by-rule verdict, PDF export), the coach, the roadmap, outreach drafts,
 market comps, and an investor-profile editor.
 
-`tests/` — 162 tests. 100% line coverage on `underwriting/` (the math) plus
-`db/`, `roadmap/`, `market/`, `reports/report_builder.py`,
+**Accounts (`auth/`).** The dashboard sits behind a username/password login
+(`auth/users.py`, bcrypt-hashed, no email verification or password reset —
+intentionally minimal). Every deal and rent comp belongs to the signed-in
+account (`user_id` on the row, enforced on every read), and each account
+gets its own investor profile seeded fresh at $0 rather than sharing one
+file — so if this is deployed somewhere with a public URL, a stranger who
+finds the link gets their own empty workspace, not your numbers.
+
+`tests/` — 180 tests. 100% line coverage on `underwriting/` (the math),
+`db/`, `auth/`, `roadmap/`, `market/`, `reports/report_builder.py`, and
 `reports/pdf_export.py`. The few uncovered lines are the actual Anthropic/
 Google API call sites, which were validated live instead of mocked.
 
@@ -96,13 +104,14 @@ source .venv/bin/activate
 streamlit run app/Home.py
 ```
 
-Opens at http://localhost:8501. Start on **New Deal** to add your first
-property (manual entry, paste a listing, or upload a rent roll), then use
-**Deal Detail** for the full analysis and verdict, **Roadmap** to track
-closing steps, **Outreach** for draft emails, **Market Comps** for rent
-comps and the tax-lookup helper, and **Investor Profile** to edit your
-cash-on-hand, income, and thresholds. Data lives in `re_va.db` (SQLite,
-git-ignored) in the project root.
+Opens at http://localhost:8501. First visit asks you to create an account
+(username + password, stored locally) — then start on **New Deal** to add
+your first property (manual entry, paste a listing, or upload a rent
+roll), use **Deal Detail** for the full analysis and verdict, **Roadmap**
+to track closing steps, **Outreach** for draft emails, **Market Comps**
+for rent comps and the tax-lookup helper, and **Investor Profile** to edit
+your cash-on-hand, income, and thresholds. Data lives in `re_va.db`
+(SQLite, git-ignored) in the project root, scoped per account.
 
 ## Running a deal from the CLI (no dashboard, no DB)
 
@@ -136,10 +145,11 @@ python -m pytest --cov=underwriting --cov=db --cov=roadmap --cov=market --cov=ou
 ## Project layout
 
 ```
-config/investor_profile.yaml   Investor-level settings and thresholds
+config/investor_profile.yaml   Default/seed settings; the CLI's profile, and the template for new accounts
 underwriting/                  The math engine (Phase 1, see above)
-cli/run_deal.py                CLI entry point (no DB, no dashboard)
-db/                             SQLAlchemy models + repository (deals, checklists, drafts, comps, LLM call log)
+cli/run_deal.py                CLI entry point (no DB, no dashboard, single-user)
+auth/                           Accounts: username/password login, per-user investor profile
+db/                             SQLAlchemy models + repository (users, deals, checklists, drafts, comps, LLM call log)
 llm/client.py                   Anthropic SDK wrapper; logs every call
 intake/                          Listing/PDF/rent-roll parsing (Phase 2)
 reports/                         Report builder, PDF export, Sheets export (Phase 2)
@@ -147,8 +157,8 @@ coach/                           Chat coach + quiz (Phase 3)
 roadmap/                         Closing checklists + tracker (Phase 3)
 outreach/                        Draft emails, never auto-sent (Phase 3)
 market/                          Rent comps + tax-lookup helper (Phase 4)
-app/                             Streamlit dashboard
-tests/                           162 tests + 3 sample deal fixtures
+app/                             Streamlit dashboard (login-gated, multi-user)
+tests/                           180 tests + 3 sample deal fixtures
 ```
 
 ## Disclaimer

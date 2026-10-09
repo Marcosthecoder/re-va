@@ -6,16 +6,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import pandas as pd
 import streamlit as st
 
-from app.common import disclaimer_banner, money, session
+from app.common import disclaimer_banner, money, require_login, session
 from db.repository import get_deal, list_deals, load_property_input
 from market.comps import add_comp, compare_to_comps, delete_comp, list_comps
 from market.tax_lookup import SUPPORTED_COUNTIES, lookup_property_tax
 
 st.set_page_config(page_title="RE-VA — Market", layout="wide")
-st.title("Market Data")
-disclaimer_banner()
 
 s = session()
+user = require_login(s)
+
+st.title("Market Data")
+disclaimer_banner()
 
 tab_comps, tab_tax, tab_compare = st.tabs(["Rent comps", "Property tax lookup", "Compare a deal to comps"])
 
@@ -34,13 +36,13 @@ with tab_comps:
     with c4:
         notes = st.text_area("Notes", key="comp_notes", height=80)
     if st.button("Add comp"):
-        add_comp(s, county, rent, bedrooms=bedrooms or None, sqft=sqft or None, municipality=municipality or None,
+        add_comp(s, user.id, county, rent, bedrooms=bedrooms or None, sqft=sqft or None, municipality=municipality or None,
                   source=source or "manual", notes=notes or None)
         st.success("Added.")
         st.rerun()
 
     st.subheader("Stored comps")
-    comps = list_comps(s)
+    comps = list_comps(s, user.id)
     if not comps:
         st.caption("None yet.")
     else:
@@ -48,7 +50,7 @@ with tab_comps:
             cols = st.columns([5, 1])
             cols[0].write(f"{c.county} / {c.municipality or '-'} | {c.bedrooms or '?'}BR | {money(c.rent)}/mo | source: {c.source}")
             if cols[1].button("Delete", key=f"del_{c.id}"):
-                delete_comp(s, c)
+                delete_comp(s, c, user.id)
                 st.rerun()
 
 with tab_tax:
@@ -62,15 +64,15 @@ with tab_tax:
         st.warning(g.reassessment_note)
 
 with tab_compare:
-    deals = list_deals(s)
+    deals = list_deals(s, user.id)
     if not deals:
         st.info("No deals yet.")
     else:
         options = {f"{d.deal_name} ({d.address})": d.id for d in deals}
         choice = st.selectbox("Deal", options=list(options))
-        deal_row = get_deal(s, options[choice])
+        deal_row = get_deal(s, options[choice], user.id)
         deal = load_property_input(deal_row)
-        comps = list_comps(s, county=deal.county)
+        comps = list_comps(s, user.id, county=deal.county)
         if not comps:
             st.warning(f"No comps stored for {deal.county} County yet — add some in the 'Rent comps' tab.")
         rows = []
