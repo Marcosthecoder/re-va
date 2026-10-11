@@ -14,6 +14,7 @@ import re
 import bcrypt
 from dotenv import load_dotenv
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from db.models import User
@@ -65,7 +66,11 @@ def create_user(session: Session, username: str, password: str) -> User:
         raise ValueError(f"Username '{username}' is already taken.")
     user = User(username=username, password_hash=hash_password(password))
     session.add(user)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise ValueError(f"Username '{username}' is already taken.") from None
     return user
 
 

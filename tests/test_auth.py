@@ -54,6 +54,28 @@ def test_create_user_rejects_duplicate_username(db_session):
         create_user(db_session, "alice", "anotherpassword")
 
 
+def test_create_user_converts_integrity_error_to_friendly_message(db_session, monkeypatch):
+    """Simulates the race where two requests both pass the pre-check (neither
+    has committed yet) before one hits the DB's UNIQUE constraint on commit.
+    Must surface the same friendly ValueError as a simple duplicate, not a
+    raw IntegrityError, and must leave the session usable afterward."""
+    from sqlalchemy.exc import IntegrityError
+
+    original_commit = db_session.commit
+
+    def _commit_once_then_conflict():
+        monkeypatch.setattr(db_session, "commit", original_commit)
+        raise IntegrityError("INSERT", {}, Exception("UNIQUE constraint failed: users.username"))
+
+    monkeypatch.setattr(db_session, "commit", _commit_once_then_conflict)
+
+    with pytest.raises(ValueError, match="already taken"):
+        create_user(db_session, "racer", "password123")
+
+    # The session must still be usable afterward (rollback actually happened).
+    assert create_user(db_session, "racer2", "password123").username == "racer2"
+
+
 def test_create_user_rejects_short_password(db_session):
     with pytest.raises(ValueError, match="at least"):
         create_user(db_session, "bob", "short")

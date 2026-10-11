@@ -119,7 +119,7 @@ with c1:
     address = st.text_input("Address", value=prefill.get("address", ""))
     price = st.number_input("Price ($)", min_value=0.0, value=float(prefill.get("price", 0) or 0), step=1000.0)
     county = st.selectbox("County", ["Lehigh", "Northampton", "Other"],
-                           index=["Lehigh", "Northampton", "Other"].index(prefill["county"]) if prefill.get("county") in ("Lehigh", "Northampton") else 0)
+                           index=["Lehigh", "Northampton", "Other"].index(prefill["county"]) if prefill.get("county") in ("Lehigh", "Northampton", "Other") else 0)
     property_type = st.selectbox(
         "Property type",
         ["duplex", "triplex", "fourplex", "mixed_use_residential_majority", "single_family", "other"],

@@ -43,12 +43,23 @@ automated county tax API is wired up — Lehigh/Northampton County don't have
 one that's reliably scrapable — so it always returns a manual-entry pointer
 plus a reassessment-after-sale reminder, never a guessed number.
 
+**Deal sourcing (`sourcing/`).** Two free lead sources on the "Find Deals"
+page, neither of which replaces your own search — both are a starting
+lead list you verify yourself. (1) HUD's own public open-data feed of
+properties HUD currently owns (unsold REO/foreclosures) — not scraped from
+hudhomestore.gov, which blocks all automated access via `robots.txt`; this
+only queries HUD's documented ArcGIS feed and links out to each case's
+HUD Home Store page for you to check price/units/bid window yourself. No
+key needed. (2) RentCast's active for-sale listings API (optional — needs
+a free API key, 50 requests/month, no card). Either result can be sent to
+New Deal with one click, prefilling address/price/county for you to review.
+
 **Dashboard (`app/`).** A Streamlit app tying all of the above together:
 a pipeline view of every deal (stage, verdict, key metrics), a new-deal
-flow (manual form, paste/PDF intake, or CSV/XLSX rent-roll upload), a full
-deal-detail page (rent roll, pro forma, scenarios, house-hack breakdown,
-rule-by-rule verdict, PDF export), the coach, the roadmap, outreach drafts,
-market comps, and an investor-profile editor.
+flow (manual form, paste/PDF intake, CSV/XLSX rent-roll upload, or a lead
+from Find Deals), a full deal-detail page (rent roll, pro forma, scenarios,
+house-hack breakdown, rule-by-rule verdict, PDF export), the coach, the
+roadmap, outreach drafts, market comps, and an investor-profile editor.
 
 **Accounts (`auth/`).** The dashboard sits behind a username/password login
 (`auth/users.py`, bcrypt-hashed, no email verification or password reset —
@@ -58,10 +69,10 @@ gets its own investor profile seeded fresh at $0 rather than sharing one
 file — so if this is deployed somewhere with a public URL, a stranger who
 finds the link gets their own empty workspace, not your numbers.
 
-`tests/` — 180 tests. 100% line coverage on `underwriting/` (the math),
-`db/`, `auth/`, `roadmap/`, `market/`, `reports/report_builder.py`, and
-`reports/pdf_export.py`. The few uncovered lines are the actual Anthropic/
-Google API call sites, which were validated live instead of mocked.
+`tests/` — 199 tests. 100% line coverage on `underwriting/` (the math),
+`db/`, `auth/`, `roadmap/`, `market/`, `sourcing/`, `reports/report_builder.py`,
+and `reports/pdf_export.py`. The few uncovered lines are the actual Anthropic/
+Google/RentCast API call sites, which were validated live instead of mocked.
 
 ## Setup
 
@@ -96,6 +107,11 @@ everything else works regardless.
 Optional, Phase 4 only: set `GOOGLE_SHEETS_CREDENTIALS_PATH` in `.env` to a
 Google service-account JSON key file to enable the "Export to Google
 Sheets" button on a deal's report. Skip it if you don't need Sheets export.
+
+Optional, Find Deals page only: set `RENTCAST_API_KEY` in `.env` to enable
+the RentCast active-listings search. Get a free key (50 requests/month, no
+card) at https://app.rentcast.io/app/api. Skip it to use only the free HUD
+foreclosure feed, which needs no key.
 
 ## Running the dashboard
 
@@ -157,8 +173,9 @@ coach/                           Chat coach + quiz (Phase 3)
 roadmap/                         Closing checklists + tracker (Phase 3)
 outreach/                        Draft emails, never auto-sent (Phase 3)
 market/                          Rent comps + tax-lookup helper (Phase 4)
+sourcing/                        Free deal leads: HUD open-data feed + optional RentCast search
 app/                             Streamlit dashboard (login-gated, multi-user)
-tests/                           180 tests + 3 sample deal fixtures
+tests/                           199 tests + 3 sample deal fixtures
 ```
 
 ## Disclaimer
